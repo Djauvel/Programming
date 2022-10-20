@@ -2,8 +2,8 @@ import cv2 as cv
 import numpy as np
 
 # Reading image and template as grayscale
-image = cv.imread("neon-text.png",0)
-template = cv.imread("Template.PNG",0)
+image = cv.imread("C:/Users/Petaa/Documents/GitHub/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/1.jpg",0)
+template = cv.imread("C:/Users/Petaa/Documents/GitHub/Python-Programming/Miniproject/Haar Cascade/Crown1.PNG",0)
 
 
 # Apply template matching
@@ -16,5 +16,5 @@ ret,thresh1 = cv.threshold(res,250,255,cv.THRESH_BINARY)
 
 #cv.imshow("matchTemplate",res)
 cv.imshow("Thresholded",thresh1)
-#cv.imshow("Neon Text Original",image)
+cv.imshow("Neon Text Original",image)
 cv.waitKey(0)
