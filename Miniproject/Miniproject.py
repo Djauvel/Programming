@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 
-board = cv.imread("C:/Users/Petaa/Documents/GitHub/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/6.jpg",1)
+board = cv.imread("C:/Users/Petaa/Documents/GitHub/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/41.jpg",1)
 HSV= cv.cvtColor(board,cv.COLOR_RGB2HSV)
 tileDimW = int(board.shape[0]/5)
 tileDimH = int(board.shape[1]/5)
@@ -59,7 +59,7 @@ def returnCol(y,x):
         tileCol[y,x] = "C"
     if R > B and RG > 1 and 1.5 <GB< 2.3 and VRel<0.70 and SH<5 and VH <3.2:
         tileCol[y,x] = "M"
-    if GB > 3.4 and RG > 1 and SH<10:
+    if GB > 3.4 and RG > 1 and SH<10.5:
         tileCol[y,x] = "W"
     
     #print("R: ", R)
@@ -76,7 +76,7 @@ for h in range(5):
 
 print(tileCol)
 #cv.imshow("HSV",HSV)
-#cv.imshow("Test",sliceList[4][0])
+cv.imshow("Test",sliceList[4][2])
 cv.imshow("board",board)
 cv.waitKey(0)
 
