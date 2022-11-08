@@ -3,13 +3,13 @@ import numpy as np
 from imutils.object_detection import non_max_suppression
 import imutils as imt
 
-board = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/6.jpg",1)
-GrassTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/GrassCrown.jpg",1)
-ForestTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/ForestCrown.jpg",1)
-LakeTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/LakeCrown.jpg",1)
-SwampTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/SwampCrown.jpg",1)
-WheatTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/WheatCrown.jpg",1)
-MountainTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/MountainCrown.jpg",1)
+board = cv.imread("Miniproject/King Domino dataset/Cropped and perspective corrected boards/74.jpg",1)
+GrassTemp = cv.imread("Miniproject/GrassCrown.jpg",1)
+ForestTemp = cv.imread("Miniproject/ForestCrown.jpg",1)
+LakeTemp = cv.imread("Miniproject/LakeCrown.jpg",1)
+SwampTemp = cv.imread("Miniproject/SwampCrown.jpg",1)
+WheatTemp = cv.imread("Miniproject/WheatCrown.jpg",1)
+MountainTemp = cv.imread("Miniproject/MountainCrown.jpg",1)
 
 tileDimW = int(board.shape[0]/5)
 tileDimH = int(board.shape[1]/5)
@@ -47,7 +47,7 @@ def drawCrown():
     detectCrown(board,GrassTemp,0.6)
     detectCrown(board,LakeTemp,0.6)
     detectCrown(board,SwampTemp,0.6)
-    detectCrown(board,WheatTemp,0.6)
+    detectCrown(board,WheatTemp,0.5)
     detectCrown(board,MountainTemp,0.7)
     global boxes
     boxes = non_max_suppression(np.array(boxes))
