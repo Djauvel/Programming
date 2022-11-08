@@ -26,7 +26,7 @@ cv.createTrackbar("Thresh Max","TrackBars",255,255,empty)
 
 
 while True:
-    board = cv.imread("C:/Users/Petaa/Documents/GitHub/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/19.jpg",1)
+    board = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/1.jpg",1)
     HSV = cv.cvtColor(board,cv.COLOR_RGB2HSV)
     h_min = cv.getTrackbarPos("Hue Min","TrackBars")
     h_max = cv.getTrackbarPos("Hue Max","TrackBars")
@@ -46,7 +46,7 @@ while True:
     mask = cv.inRange(HSV, lower, upper)
 
     imageResult = cv.bitwise_and(board,board,mask=mask)
-
+    imageResult = cv.medianBlur(imageResult,3)
     MaskT = cv.cvtColor(imageResult,cv.COLOR_BGR2GRAY)
 
     
@@ -56,6 +56,7 @@ while True:
     th3 = cv.adaptiveThreshold(MaskT,255,cv.ADAPTIVE_THRESH_MEAN_C,\
             cv.THRESH_BINARY,11,2)
     cv.imshow("MaskT",MaskT)
+    #cv.imshow("Blur",blur)
     #cv.imshow("Original",board)
     #cv.imshow("HSV",HSV)
     #cv.imshow("Mask",mask)

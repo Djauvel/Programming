@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 
-board = cv.imread("C:/Users/Petaa/Documents/GitHub/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/6.jpg",1)
+board = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/63.jpg",1)
 HSV= cv.cvtColor(board,cv.COLOR_RGB2HSV)
 tileDimW = int(board.shape[0]/5)
 tileDimH = int(board.shape[1]/5)
@@ -15,11 +15,11 @@ tileCol = np.array((["","","","",""],
 
 def returnCol(y,x):
     MeanV=np.mean(HSV[:,:,2])
-    bonana = np.array(sliceList[y][x])
-    B = np.mean(bonana[:,:,0])
-    G = np.mean(bonana[:,:,1])
-    R = np.mean(bonana[:,:,2])
-    hsv = cv.cvtColor(bonana, cv.COLOR_BGR2HSV)
+    Tile = np.array(sliceList[y][x])
+    B = np.mean(Tile[:,:,0])
+    G = np.mean(Tile[:,:,1])
+    R = np.mean(Tile[:,:,2])
+    hsv = cv.cvtColor(Tile, cv.COLOR_BGR2HSV)
     H = np.mean(hsv[:,:,0])
     S = np.mean(hsv[:,:,1])
     V = np.mean(hsv[:,:,2])
@@ -73,6 +73,7 @@ for h in range(5):
     for w in range(5):
         sliceList[h].append(board[tileDimH*h+5:tileDimH*(h+1)-5,tileDimW*w+5:tileDimW*(w+1)-5])
         returnCol(h,w)
+        cv.putText(board,f"{tileCol[h,w]}",((w)*100+50,(h)*100+50),cv.FONT_ITALIC,1,(255,50,50),4,cv.LINE_AA)
 
 print(tileCol)
 #cv.imshow("HSV",HSV)
