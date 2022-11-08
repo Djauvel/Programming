@@ -3,30 +3,27 @@ import numpy as np
 
 def empty(a):
     pass
-#0,164,0,78,119,170
 
-#Other good one
-#0 179 0 48 140 144
 
-#Gaussian T
-#83 117 21 48 98 176
-
-#85 97 9 166 111 255
+#90 94 171 225 126 255
+#84 100 178 255 118 190
+#90 100 56 255 152 190
 cv.namedWindow("TrackBars")
 cv.resizeWindow("TrackBars",640,340)
-cv.createTrackbar("Hue Min","TrackBars",83,179,empty)
-cv.createTrackbar("Hue Max","TrackBars",117,179,empty)
-cv.createTrackbar("Sat Min","TrackBars",21,255,empty)
-cv.createTrackbar("Sat Max","TrackBars",115,255,empty)
-cv.createTrackbar("Val Min","TrackBars",98,255,empty)
-cv.createTrackbar("Val Max","TrackBars",176,255,empty)
-cv.createTrackbar("Thresh Min","TrackBars",130,255,empty)
+cv.createTrackbar("Hue Min","TrackBars",90,179,empty)
+cv.createTrackbar("Hue Max","TrackBars",100,179,empty)
+cv.createTrackbar("Sat Min","TrackBars",133,255,empty)
+cv.createTrackbar("Sat Max","TrackBars",255,255,empty)
+cv.createTrackbar("Val Min","TrackBars",118,255,empty)
+cv.createTrackbar("Val Max","TrackBars",190,255,empty)
+cv.createTrackbar("Thresh Min","TrackBars",90,255,empty)
 cv.createTrackbar("Thresh Max","TrackBars",255,255,empty)
 
-
+kernel = np.ones((3,3))
 
 while True:
-    board = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/1.jpg",1)
+    board = cv.imread("C:/Users/Petaa/Documents/GitHub/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/1.jpg",1)
+    board = cv.medianBlur(board,3)
     HSV = cv.cvtColor(board,cv.COLOR_RGB2HSV)
     h_min = cv.getTrackbarPos("Hue Min","TrackBars")
     h_max = cv.getTrackbarPos("Hue Max","TrackBars")
@@ -46,34 +43,23 @@ while True:
     mask = cv.inRange(HSV, lower, upper)
 
     imageResult = cv.bitwise_and(board,board,mask=mask)
-    imageResult = cv.medianBlur(imageResult,3)
-    MaskT = cv.cvtColor(imageResult,cv.COLOR_BGR2GRAY)
+    imageResult = cv.morphologyEx(imageResult,cv.MORPH_OPEN,kernel,iterations=2)
 
-    
+    MaskT = cv.cvtColor(imageResult,cv.COLOR_BGR2GRAY)
     Thresholded, thresh1 = cv.threshold(MaskT,low,high,cv.THRESH_BINARY)
-    th2 = cv.adaptiveThreshold(MaskT,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
-            cv.THRESH_BINARY,11,2)
-    th3 = cv.adaptiveThreshold(MaskT,255,cv.ADAPTIVE_THRESH_MEAN_C,\
-            cv.THRESH_BINARY,11,2)
-    cv.imshow("MaskT",MaskT)
-    #cv.imshow("Blur",blur)
-    #cv.imshow("Original",board)
+
+    #th2 = cv.adaptiveThreshold(MaskT,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
+            #cv.THRESH_BINARY,11,2)
+    #th3 = cv.adaptiveThreshold(MaskT,255,cv.ADAPTIVE_THRESH_MEAN_C,\
+            #cv.THRESH_BINARY,11,2)
+    #cv.imshow("MaskT",MaskT)
+    cv.imshow("Original",board)
     #cv.imshow("HSV",HSV)
-    #cv.imshow("Mask",mask)
+    cv.imshow("Mask",mask)
     cv.imshow("ImageResult",imageResult)
     #cv.imshow("erodedResult",erode)
     #cv.imshow("dilated",dilate)
     cv.imshow("Thresholded",thresh1)
-    cv.imshow("Thresholded2",th2)
-    cv.imshow("Thresholded3",th3)
+    #cv.imshow("Thresholded2",th2)
+    #cv.imshow("Thresholded3",th3)
     cv.waitKey(1)
-#Other good one
-#0 179 0 48 140 144
-
-#0,179,95,255,0,255
-
-#BEST ONE:
-#0,164,0,78,119,170
-
-#For Dilation:
-#0,164,0,56,143,150
