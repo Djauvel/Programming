@@ -30,5 +30,5 @@ ax[0].scatter(class4.feature1Data,class4.feature2Data)
 ax[1].scatter(class4.feature3Data,class4.feature4Data)
 
 nbrs = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit([class1.feature1Data,class1.feature2Data])
-print (nbrs)
+
 plt.show()
