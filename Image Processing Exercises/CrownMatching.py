@@ -3,7 +3,7 @@ import numpy as np
 from imutils.object_detection import non_max_suppression
 import imutils as imt
 
-board = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/6.jpg",1)
+board = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/73.jpg",1)
 GrassTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/GrassCrown.jpg",1)
 ForestTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/ForestCrown.jpg",1)
 LakeTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/LakeCrown.jpg",1)
@@ -15,7 +15,6 @@ tileDimW = int(board.shape[0]/5)
 tileDimH = int(board.shape[1]/5)
 
 crownCount = np.zeros((5,5))
-sliceList = []
 boxes = list()
 
 def detectCrown(tile,template,t):
@@ -54,13 +53,11 @@ def drawCrown():
 
     for (y1,x1,y2,x2) in boxes:
         cv.rectangle(board,(x1,y1),(x2,y2),(0,255,0),2)
-
-
-for h in range(5):
-    sliceList.append([])
-    for w in range(5):
-        sliceList[h].append(board[tileDimH*h+5:tileDimH*(h+1)-5,tileDimW*w+5:tileDimW*(w+1)-5])
+        x = x1//100
+        y = y1//100
+        crownCount[y,x] += 1
         
 drawCrown()
+print(crownCount)
 cv.imshow("board",board)
 cv.waitKey(0)

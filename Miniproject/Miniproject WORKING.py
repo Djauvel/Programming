@@ -5,8 +5,8 @@ import imutils as imt
 from collections import deque
 
 #Load board and convert to HSV
-board = cv.imread("King Domino dataset/Cropped and perspective corrected boards/2.jpg",1)
-HSV = cv.cvtColor(board,cv.COLOR_RGB2HSV)
+board = cv.imread("King Domino dataset/Cropped and perspective corrected boards/12.jpg",1)
+HSV= cv.cvtColor(board,cv.COLOR_RGB2HSV)
 
 #Loading crown templates for each tile type
 GrassTemp = cv.imread("GrassCrown.jpg",1)
@@ -32,14 +32,8 @@ tileCol = np.array((["","","","",""],
                     ["","","","",""]))
 
 #Grassfire Containers:
-lakes = np.zeros((5,5))
-pastures = np.zeros((5,5))
-swamps = np.zeros((5,5))
-mountains = np.zeros((5,5))
-wheats = np.zeros((5,5))
-forests = np.zeros((5,5))
-unknowns = np.zeros((5,5))
-components = [lakes,pastures,swamps,mountains,wheats,forests,unknowns]
+Islands = np.zeros((5,5))
+tileTypes = ["L","P","S","M","W","F","U"]
 #Final score
 score = 0
 
@@ -80,12 +74,11 @@ def returnCol(y,x):
         tileCol[y,x] = "L"
     if R > B and R > G and 0.65<VRel<1.1 and 7.8>SH>1.75 and GB < 3:
         tileCol[y,x] = "S"
-    if R > B and R > G and 0.6<VRel<0.7 and GB<1.5:
-        tileCol[y,x] = "C"
     if R > B and RG > 1 and 1.5 <GB< 2.3 and VRel<0.70 and SH<5 and VH <3.2:
         tileCol[y,x] = "M"
     if GB > 3.4 and RG > 1 and SH<12:
         tileCol[y,x] = "W"
+#----------------------------------
 #Functions for detecting and drawing crowns
 def detectCrown(tile,template,t):
     #Import templates and rotate to account for all possible orientations
@@ -132,6 +125,7 @@ def drawCrown():
         x = x1//tileDimW
         y = y1//tileDimH
         crownCount[y,x] += 1
+#---------------------------------
 #Function takes a matrix and a letter corresponding to a tile type to generate a matrix of 1's
 #for every specified letter, and 0 for everything else (To detect islands with grassfire)
 def retCmap(type,letter):
@@ -141,6 +135,7 @@ def retCmap(type,letter):
                 type[y,x] = 1
             else:
                 type[y,x] = 0
+
 #Grassfire implementation:
 def ignite_fire(image,coordinates,current_id):
     burn_queue = deque([])
@@ -176,7 +171,8 @@ def returnGroups(image):
             next_id, image = ignite_fire(image, (y, x), next_id)
     
     return image
-#Calculate total points for specified tiletype
+#---------------------------------
+#Calculate total points for specified tiletype - CAN ONLY BE RUN WHEN TILETYPES, CROWNS AND ISLANDS HAVE BEEN COMPUTED
 def calcPoints(arr):
     sum = 0
     #If sum of array is 0, it means that no tiles of this type exists on the board
@@ -205,22 +201,14 @@ for h in range(5):
         returnCol(h,w)
         cv.putText(board,f"{tileCol[h,w]}",((w)*100+40,(h)*100+60),cv.FONT_ITALIC,1,(255,255,150),4,cv.LINE_AA)
 
-#Generate matrices of pure types for grassfire island detection:
-retCmap(lakes,"L")
-retCmap(pastures,"P")
-retCmap(swamps,"S")
-retCmap(mountains,"M")
-retCmap(wheats,"W")
-retCmap(forests,"F")
-retCmap(unknowns,"U")
-
 #Find and draw crowns on the board
 drawCrown()
 
 #When all crowns and tiles have been determined, run grassfire for each type and calculate the points contained
-for x in range(len(components)):
-    returnGroups(components[x])
-    score += calcPoints(components[x])
+for type in tileTypes:
+    retCmap(Islands,type)
+    returnGroups(Islands)
+    score += calcPoints(Islands)
 
 #Draw final score on board and show board
 cv.putText(board,f"Score: {score}",(20,(board.shape[1]-20)),cv.FONT_HERSHEY_COMPLEX,1,(0,0,255),2)
