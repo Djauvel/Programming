@@ -5,16 +5,18 @@ import imutils as imt
 from collections import deque
 
 #Load board and convert to HSV
-board = cv.imread("King Domino dataset/Cropped and perspective corrected boards/12.jpg",1)
+board = cv.imread("Miniproject/King Domino dataset/Cropped and perspective corrected boards/57.jpg",1)
 HSV= cv.cvtColor(board,cv.COLOR_RGB2HSV)
 
 #Loading crown templates for each tile type
-GrassTemp = cv.imread("GrassCrown.jpg",1)
-ForestTemp = cv.imread("ForestCrown.jpg",1)
-LakeTemp = cv.imread("LakeCrown.jpg",1)
-SwampTemp = cv.imread("SwampCrown.jpg",1)
-WheatTemp = cv.imread("WheatCrown.jpg",1)
-MountainTemp = cv.imread("MountainCrown.jpg",1)
+GrassTemp = cv.imread("Miniproject/GrassCrown.jpg",1)
+ForestTemp = cv.imread("Miniproject/ForestCrown.jpg",1)
+LakeTemp = cv.imread("Miniproject/LakeCrown.jpg",1)
+SwampTemp = cv.imread("Miniproject/SwampCrown.jpg",1)
+WheatTemp = cv.imread("Miniproject/WheatCrown.jpg",1)
+MountainTemp = cv.imread("Miniproject/MountainCrown.jpg",1)
+#Templates and their threshold
+templates =[(GrassTemp,0.6),(ForestTemp,0.6),(LakeTemp,0.7),(SwampTemp,0.7),(WheatTemp,0.7),(MountainTemp,0.7)]
 
 #Calculate individual tile dimensions:
 tileDimW, tileDimH = int(board.shape[0]/5), int(board.shape[1]/5)
@@ -51,18 +53,12 @@ def returnCol(y,x):
     S = np.mean(hsv[:,:,1])
     V = np.mean(hsv[:,:,2])
     VRel = V/MeanV
-    BG = B/G
-    BR = B/R
     GB = G/B
     GR = G/R
-    RB = B/R
     RG = R/G
-    HS = H/S
-    HV = H/V
     SH = S/H
     SV = S/V
     VH = V/H
-    VS = V/S
 
     #Determine tile type based on features and storing in tileCol array
     tileCol[y,x] = "U"
@@ -109,12 +105,8 @@ def detectCrown(tile,template,t):
 #Draw crowns on board
 def drawCrown():
     #Detect all matches of each type of template and save in boxes
-    detectCrown(board,ForestTemp,0.6)
-    detectCrown(board,GrassTemp,0.6)
-    detectCrown(board,LakeTemp,0.7)
-    detectCrown(board,SwampTemp,0.7)
-    detectCrown(board,WheatTemp,0.7)
-    detectCrown(board,MountainTemp,0.7)
+    for (template,threshold) in templates:
+        detectCrown(board,template,threshold)
     global boxes
     #Determine best matching box for each crown using non_max_suppression
     boxes = non_max_suppression(np.array(boxes))
@@ -126,15 +118,6 @@ def drawCrown():
         y = y1//tileDimH
         crownCount[y,x] += 1
 #---------------------------------
-#Function takes a matrix and a letter corresponding to a tile type to generate a matrix of 1's
-#for every specified letter, and 0 for everything else (To detect islands with grassfire)
-def retCmap(type,letter):
-    for y in range(5):
-        for x in range(5):
-            if tileCol[y,x] == letter:
-                type[y,x] = 1
-            else:
-                type[y,x] = 0
 #Grassfire implementation:
 def ignite_fire(image,coordinates,current_id):
     burn_queue = deque([])
@@ -163,13 +146,21 @@ def ignite_fire(image,coordinates,current_id):
         current_id +=1
     
     return current_id, image
-def returnGroups(image):
+#Function takes a matrix and a letter corresponding to a tile type to generate a matrix of 1's
+#for every specified letter, and 0 for everything else (To detect islands with grassfire)    
+def retCmap(type,letter):
+    for y in range(5):
+        for x in range(5):
+            if tileCol[y,x] == letter:
+                type[y,x] = 1
+            else:
+                type[y,x] = 0
     next_id = 2
     for y in range(5):
         for x in range(5):
-            next_id, image = ignite_fire(image, (y, x), next_id)
+            next_id, type = ignite_fire(type, (y, x), next_id)
     
-    return image
+    return type
 #---------------------------------
 #Calculate total points for specified tiletype - CAN ONLY BE RUN WHEN TILETYPES, CROWNS AND ISLANDS HAVE BEEN COMPUTED
 def calcPoints(arr):
@@ -206,7 +197,6 @@ drawCrown()
 #When all crowns and tiles have been determined, run grassfire for each type and calculate the points contained
 for type in tileTypes:
     retCmap(Islands,type)
-    returnGroups(Islands)
     score += calcPoints(Islands)
 
 #Draw final score on board and show board

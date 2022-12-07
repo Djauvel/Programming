@@ -20,7 +20,8 @@ def retCmap(type,letter):
             if tileCol[y,x] == letter:
                 type[y,x] = 1
             else:
-                type[y,x] = 0    
+                type[y,x] = 0 
+    print(type)   
 
 retCmap(lakes,"L")
 retCmap(pastures,"P")
@@ -70,7 +71,8 @@ components = [lakes,pastures,swamps,mountains,wheats,forests]
 for x in range(len(components)):
     returnGroups(components[x])
 
-print(components)
+print(tileCol)
+print(pastures)
 
 #print("pastures:", pastures)
 #print("swamps:", swamps)
