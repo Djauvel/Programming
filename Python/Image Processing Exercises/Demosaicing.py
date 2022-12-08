@@ -1,4 +1,3 @@
-import cv2 as cv
 import numpy as np
 
 Bayer = np.array([[10, 20, 12, 23],
@@ -12,9 +11,9 @@ for x in (range(len(demosaic))):
     for y in (range(len(demosaic))):
         if (x%2==0):
             if (y%2==0):
-                demosaic[x,y,0] = Bayer[x+1,y+1] #R
+                demosaic[x,y,0] = Bayer[x+1,y+1] #B
                 demosaic[x,y,1] = Bayer[x,y+1]   #G
-                demosaic[x,y,2] = Bayer[x,y]     #B
+                demosaic[x,y,2] = Bayer[x,y]     #R
             else:
                 demosaic[x,y,0] = Bayer[x+1,y]
                 demosaic[x,y,1] = Bayer[x,y]

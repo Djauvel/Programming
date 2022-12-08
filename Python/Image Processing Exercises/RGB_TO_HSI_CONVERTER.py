@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 
-Image = cv.imread("monkey.jpg",1)
+Image = cv.imread("Python/Image Processing Exercises/monkey.jpg",1)
 
 HSI = np.zeros((Image.shape[0],Image.shape[1],Image.shape[2]),np.uint8)
 h = range(Image.shape[0])

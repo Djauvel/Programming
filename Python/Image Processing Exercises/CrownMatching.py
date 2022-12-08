@@ -1,7 +1,6 @@
 import cv2 as cv
 import numpy as np
 from imutils.object_detection import non_max_suppression
-import imutils as imt
 
 board = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/King Domino dataset/Cropped and perspective corrected boards/73.jpg",1)
 GrassTemp = cv.imread("C:/Users/Petaa/Desktop/Skole/Programming/Python/Python-Programming/Miniproject/GrassCrown.jpg",1)
