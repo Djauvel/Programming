@@ -13,6 +13,7 @@ res = np.ndarray.astype(res*255,np.uint8)
 ret,thresh1 = cv.threshold(res,250,255,cv.THRESH_BINARY)
 # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
 
+print(3!)
 
 #cv.imshow("matchTemplate",res)
 cv.imshow("Thresholded",thresh1)
