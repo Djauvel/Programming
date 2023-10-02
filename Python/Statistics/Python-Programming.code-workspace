@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		}
+	],
+	"settings": {
+		"python.linting.pylintEnabled": true,
+		"python.linting.enabled": true,
+		"python.analysis.typeCheckingMode": "basic",
+		"python.formatting.provider": "black",
+		
+	}
+}
