@@ -15,8 +15,9 @@ height = screen.get_height()
 width = screen.get_width()
 move_speed = width * 0.25
 isJump = False
-jumpCount = 10
+jumpCount = 20
 gravity = 10
+gameSpeed = 1
 
 
 # Game score handling
@@ -24,7 +25,7 @@ score = 0
 font = pygame.font.Font(None,36)
 
 
-player_pos = pygame.Vector2((width / 2, height - height*0.9))
+player_pos = pygame.Vector2((width / 2, height*0.9))
 
 
 # Loading Textures
@@ -110,9 +111,12 @@ class character(pygame.sprite.Sprite):
         self.image = pygame.transform.scale_by(self.image,0.2)
         self.height = self.image.get_height()
         self.width = self.image.get_width()
+        self.can_jump = True
+        self.can_doubleJump = True
+        self.gravityModifier = 1
 
     def update(self):
-            global move_speed, isJump, jumpCount, gravity
+            global move_speed, jumpCount, gravity
             screen.blit(self.image, player_pos)
             keys = pygame.key.get_pressed()
 
@@ -121,25 +125,70 @@ class character(pygame.sprite.Sprite):
                 player_pos.x -= move_speed * dt
             if keys[pygame.K_d] and player_pos.x < width - bass.width:
                 player_pos.x += move_speed * dt
-            if not (isJump):
-                if player_pos.y < height*0.8:
-                    player_pos.y += gravity
-                if keys[pygame.K_s] and player_pos.y < height - bass.height:
-                    player_pos.y += move_speed * dt
-                if keys[pygame.K_SPACE]:
-                    isJump = True
-            else:
-                if jumpCount >= -10:
-                    player_pos.y -= (jumpCount * abs(jumpCount) * 0.5)
-                    jumpCount -= 1
-                else: 
-                    isJump = False
-                    jumpCount = 10
+            
+            # Gravity
+            if player_pos.y < height*0.85 and not self.can_jump:
+                player_pos.y += gravity * self.gravityModifier
+                self.gravityModifier += 0.05
+
+            if player_pos.y >= height*0.85:
+                self.gravityModifier = 1
+
+           
+   
+class Character(pygame.sprite.Sprite):
+    def __init__(self) -> None:
+        pygame.sprite.Sprite.__init__(self)
+        self.image = bass_tex
+        self.image = pygame.transform.scale(self.image, (int(0.2 * self.image.get_width()), int(0.2 * self.image.get_height())))
+        self.rect = self.image.get_rect()
+        self.rect.center = (width // 2, height * 0.85)
+        self.can_jump = True
+        self.can_double_jump = True
+        self.gravity = 1
+        self.jump_strength = 15
+
+    def update(self):
+        global move_speed
+        screen.blit(self.image, player_pos)
+        keys = pygame.key.get_pressed()
+
+        # Player Control
+        if keys[pygame.K_a] and self.rect.left > 0:
+            self.rect.x -= move_speed * dt
+        if keys[pygame.K_d] and self.rect.right < width:
+            self.rect.x += move_speed * dt
+
+        # Jumping Mechanics
+        if self.can_jump:
+            if keys[pygame.K_SPACE]:
+                self.jump()
+
+        # Apply gravity
+        if self.rect.y < height * 0.85:
+            self.rect.y += self.gravity
+            self.gravity += 0.5
+
+        if self.rect.y >= height * 0.85:
+            self.gravity = 1
+            self.can_jump = True
+            self.can_double_jump = True
+
+    def jump(self):
+        if self.can_jump:
+            self.gravity = 0
+            self.can_jump = False
+            self.gravity -= self.jump_strength
+        elif self.can_double_jump:
+            self.gravity = 0
+            self.can_double_jump = False
+            self.gravity -= self.jump_strength
+
 
 # Functions
 # FIX CODE (IS UGLY AS)
 def draw_bg_inf():
-    global x1, x2, x3, x4, x5, y1, y2, y3, y4, y5
+    global x1, x2, x3, x4, x5, y1, y2, y3, y4, y5, gameSpeed
     screen.blit(bg_images[0],(x1,0))
     screen.blit(bg_images[0],(y1,0))
 
@@ -155,16 +204,16 @@ def draw_bg_inf():
     screen.blit(bg_images[4],(x5,0))
     screen.blit(bg_images[4],(y5,0))
 
-    x1 -= 3
-    y1 -= 3
-    x2 -= 3.5
-    y2 -= 3.5
-    x3 -= 4
-    y3 -= 4
-    x4 -= 4.5
-    y4 -= 4.5
-    x5 -= 5
-    y5 -= 5
+    x1 -= 3 * gameSpeed
+    y1 -= 3 * gameSpeed
+    x2 -= 3.5 * gameSpeed
+    y2 -= 3.5 * gameSpeed
+    x3 -= 4 * gameSpeed
+    y3 -= 4 * gameSpeed
+    x4 -= 4.5 * gameSpeed
+    y4 -= 4.5 * gameSpeed
+    x5 -= 5 * gameSpeed
+    y5 -= 5 * gameSpeed
 
     if x1 < -width:
         x1 = width
@@ -194,6 +243,12 @@ doob = doobie()
 die = dice()
 bass = character()
 
+all_sprites = pygame.sprite.Group()
+all_sprites.add(doob)
+all_sprites.add(die)
+all_sprites.add(bass)
+
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -202,10 +257,9 @@ while running:
     # Display Background
     draw_bg_inf()
 
-    die.update()
-    doob.update()
-    bass.update()
-    
+    # Update all objects
+    all_sprites.update()
+
     # Draw Score
     score_text = font.render(f"Score: {score}", True, (255,255,255), (0,0,0))
     screen.blit(score_text, (10,10))
