@@ -36,15 +36,17 @@ background_tex = pygame.transform.scale(pygame.image.load("Textures/grass.png"),
 
 # Scrolling Background Implementation
 bg_images = []
-for i in range(1,6):
-    bg_image = pygame.transform.scale(pygame.image.load(f"Textures/Background/{i}.png").convert_alpha(),(width,height))
+for i in range(1,7):
+    bg_image = pygame.transform.scale(pygame.image.load(f"Textures/Background/{i}.png").convert_alpha(),(width+6,height))
     bg_images.append(bg_image)
+
 
 x1, y1 = 0, width
 x2, y2 = 0, width
 x3, y3 = 0, width
 x4, y4 = 0, width
 x5, y5 = 0, width
+x6, y6 = 0, width
 
 
 # Classes
@@ -132,9 +134,7 @@ class character(pygame.sprite.Sprite):
                 self.gravityModifier += 0.05
 
             if player_pos.y >= height*0.85:
-                self.gravityModifier = 1
-
-           
+                self.gravityModifier = 1          
    
 class Character(pygame.sprite.Sprite):
     def __init__(self) -> None:
@@ -188,7 +188,7 @@ class Character(pygame.sprite.Sprite):
 # Functions
 # FIX CODE (IS UGLY AS)
 def draw_bg_inf():
-    global x1, x2, x3, x4, x5, y1, y2, y3, y4, y5, gameSpeed
+    global x1, x2, x3, x4, x5, x6, y1, y2, y3, y4, y5, y6, gameSpeed
     screen.blit(bg_images[0],(x1,0))
     screen.blit(bg_images[0],(y1,0))
 
@@ -204,6 +204,9 @@ def draw_bg_inf():
     screen.blit(bg_images[4],(x5,0))
     screen.blit(bg_images[4],(y5,0))
 
+    screen.blit(bg_images[5],(x6,0))
+    screen.blit(bg_images[5],(y6,0))
+
     x1 -= 3 * gameSpeed
     y1 -= 3 * gameSpeed
     x2 -= 3.5 * gameSpeed
@@ -214,6 +217,8 @@ def draw_bg_inf():
     y4 -= 4.5 * gameSpeed
     x5 -= 5 * gameSpeed
     y5 -= 5 * gameSpeed
+    x6 -= 5.5 * gameSpeed
+    y6 -= 5.5 * gameSpeed
 
     if x1 < -width:
         x1 = width
@@ -225,6 +230,8 @@ def draw_bg_inf():
         x4 = width
     if x5 < -width:
         x5 = width
+    if x6 < -width:
+        x6 = width
     if y1 < -width:
         y1 = width
     if y2 < -width:
@@ -235,6 +242,8 @@ def draw_bg_inf():
         y4 = width
     if y5 < -width:
         y5 = width
+    if y6 < -width:
+        y6 = width
 
 
 
