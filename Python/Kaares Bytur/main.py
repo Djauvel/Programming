@@ -6,6 +6,7 @@ import numpy as np
 pygame.init()
 screen = pygame.display.set_mode((1920,1080))
 clock = pygame.time.Clock()
+pygame.display.set_caption("Kaare's Bytur")
 running = True
 dt = 0
 FPS = 60
@@ -13,11 +14,11 @@ FPS = 60
 # Settings
 height = screen.get_height()
 width = screen.get_width()
-move_speed = width * 0.25
-isJump = False
-jumpCount = 20
-gravity = 10
-gameSpeed = 1
+
+moving_right = False
+moving_left = False
+gameSpeed = 4
+parallaxSpeed=1
 
 
 # Game score handling
@@ -25,21 +26,19 @@ score = 0
 font = pygame.font.Font(None,36)
 
 
-player_pos = pygame.Vector2((width / 2, height*0.9))
-
-
 # Loading Textures
 doobie_tex = pygame.image.load("Textures/Doob.png")
 dice_tex = pygame.image.load("Textures/dice.png")
 bass_tex = pygame.transform.scale_by(pygame.image.load("Textures/bass.png"), 0.1)
 background_tex = pygame.transform.scale(pygame.image.load("Textures/grass.png"),(width,height))
+platform_tex = pygame.image.load("Textures/platform.png")
 
-# Scrolling Background Implementation
+# Scrolling Parallax Background Implementation
 bg_images = []
 for i in range(1,7):
-    bg_image = pygame.transform.scale(pygame.image.load(f"Textures/Background/{i}.png").convert_alpha(),(width+6,height))
+    #FIX road texture (6) gap der kommer. +11 er et temporary fix, der også bliver applied til alle andre billeder i baggrunden
+    bg_image = pygame.transform.scale(pygame.image.load(f"Textures/Background/{i}.png").convert_alpha(),(width+11,height))
     bg_images.append(bg_image)
-
 
 x1, y1 = 0, width
 x2, y2 = 0, width
@@ -49,6 +48,7 @@ x5, y5 = 0, width
 x6, y6 = 0, width
 
 
+
 # Classes
 class doobie(pygame.sprite.Sprite):
     # Class for doobie item
@@ -56,14 +56,14 @@ class doobie(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = doobie_tex
         self.image = pygame.transform.scale_by(self.image,0.1)
-        self.pos = [width + 300,randrange(height)]
+        self.pos = pygame.Vector2(width + randrange(300), randrange(100, height-200))
 
     def newitem(self):
-        self.pos = [width + 300,randrange(height)]
+        self.pos.x, self.pos.y = width + randrange(300), randrange(100, height-200)
 
     def update(self):
         screen.blit(self.image, self.pos)
-        self.dist_to_player = np.sqrt((self.pos[1]-player_pos[1])**2 + (self.pos[0]-player_pos[0])**2)
+        self.dist_to_player = np.sqrt((self.pos.y-bass.player_rect.y)**2 + (self.pos.x-bass.player_rect.x)**2)
         
         if self.dist_to_player < 75:
             self.newitem()
@@ -71,7 +71,7 @@ class doobie(pygame.sprite.Sprite):
             score += 100
         
         # Move item to left
-        self.pos[0] -= 5
+        self.pos[0] -= 5*gameSpeed
 
         # If item goes off-screen, generate new    
         
@@ -84,21 +84,21 @@ class dice(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = dice_tex
         self.image = pygame.transform.scale_by(self.image,0.2)
-        self.pos = [width + 300,randrange(height)]
+        self.pos = pygame.Vector2(width + randrange(300), randrange(100, height-200))
 
     def newitem(self):
-        self.pos = [width + 300,randrange(height)]
+        self.pos.x, self.pos.y = width + randrange(300), randrange(100, height-200)
 
     def update(self):
         screen.blit(self.image, self.pos)
-        self.dist_to_player = np.sqrt((self.pos[1]-player_pos[1])**2 + (self.pos[0]-player_pos[0])**2)
+        self.dist_to_player = np.sqrt((self.pos.y-bass.player_rect.y)**2 + (self.pos.x-bass.player_rect.x)**2)
         if self.dist_to_player < 75:
             self.newitem()
             global score
             score += 250
 
         # Move item to left
-        self.pos[0] -= 5
+        self.pos[0] -= 5*gameSpeed
 
         # If item goes off-screen, generate new    
         
@@ -109,80 +109,82 @@ class character(pygame.sprite.Sprite):
     # Class for character
     def __init__(self) -> None:
         pygame.sprite.Sprite.__init__(self)
+        
+        # Spawn location
+        self.player_pos = pygame.Vector2((width / 2, height / 2))
         self.image = bass_tex
         self.image = pygame.transform.scale_by(self.image,0.2)
         self.height = self.image.get_height()
         self.width = self.image.get_width()
-        self.can_jump = True
-        self.can_doubleJump = True
-        self.gravityModifier = 1
+        self.player_rect = pygame.Rect(self.player_pos.x, self.player_pos.y, self.width, self.height)
+
+        self.move_speed = width
+        self.gravity = 100
+        
+
+        self.player_y_momentum = 0
+        self.player_x_momentum = 0
 
     def update(self):
-            global move_speed, jumpCount, gravity
-            screen.blit(self.image, player_pos)
+            screen.blit(self.image, (self.player_rect.x,self.player_rect.y))
             keys = pygame.key.get_pressed()
 
-            # Player Control
-            if keys[pygame.K_a] and player_pos.x > 0:
-                player_pos.x -= move_speed * dt
-            if keys[pygame.K_d] and player_pos.x < width - bass.width:
-                player_pos.x += move_speed * dt
-            
-            # Gravity
-            if player_pos.y < height*0.85 and not self.can_jump:
-                player_pos.y += gravity * self.gravityModifier
-                self.gravityModifier += 0.05
+            # Reset intended movement every iteration
+            self.player_movement = [0, 0]
 
-            if player_pos.y >= height*0.85:
-                self.gravityModifier = 1          
-   
-class Character(pygame.sprite.Sprite):
+            # Gravity/ bouncing
+            #if self.player_pos.y > height - bass.height:
+            #    self.player_y_momentum = - self.player_y_momentum
+            #else:
+            #    self.player_y_momentum += self.gravity * dt
+            #self.player_pos.y += self.player_y_momentum
+#
+            # Cap maximum y-axis velocity
+            
+
+            if keys[pygame.K_a]:
+                self.player_movement[0] -= self.move_speed * dt
+            if keys[pygame.K_d]:
+                self.player_movement[0] += self.move_speed * dt
+            if keys[pygame.K_SPACE]:
+                self.player_y_momentum -= 20
+            
+            self.player_y_momentum += self.gravity * dt
+            self.player_movement[0] -= 5 * gameSpeed
+
+            if self.player_y_momentum > 30:
+                self.player_y_momentum = 30
+            elif self.player_y_momentum < -30:
+                self.player_y_momentum = -30
+
+            self.player_movement[1] += self.player_y_momentum
+            
+            
+            self.player_rect, self.collisions = move(self.player_rect, self.player_movement, tiles)
+
+class platform(pygame.sprite.Sprite):
     def __init__(self) -> None:
+        #FIX platform Collision
         pygame.sprite.Sprite.__init__(self)
-        self.image = bass_tex
-        self.image = pygame.transform.scale(self.image, (int(0.2 * self.image.get_width()), int(0.2 * self.image.get_height())))
-        self.rect = self.image.get_rect()
-        self.rect.center = (width // 2, height * 0.85)
-        self.can_jump = True
-        self.can_double_jump = True
-        self.gravity = 1
-        self.jump_strength = 15
+        self.image = platform_tex
+        self.image = pygame.transform.scale_by(self.image,0.2)
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.pos = pygame.Vector2(width + randrange(300),randrange(200,height-300))
+        self.rect = pygame.Rect(self.pos.x, self.pos.y, self.width, self.height)
+
+    def newPlatform(self):
+        self.rect.x, self.rect.y = width + randrange(300), randrange(200,height-300)
+        
 
     def update(self):
-        global move_speed
-        screen.blit(self.image, player_pos)
-        keys = pygame.key.get_pressed()
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+        self.rect.x -= 5 * gameSpeed
 
-        # Player Control
-        if keys[pygame.K_a] and self.rect.left > 0:
-            self.rect.x -= move_speed * dt
-        if keys[pygame.K_d] and self.rect.right < width:
-            self.rect.x += move_speed * dt
+        tiles.append(self.rect)
 
-        # Jumping Mechanics
-        if self.can_jump:
-            if keys[pygame.K_SPACE]:
-                self.jump()
-
-        # Apply gravity
-        if self.rect.y < height * 0.85:
-            self.rect.y += self.gravity
-            self.gravity += 0.5
-
-        if self.rect.y >= height * 0.85:
-            self.gravity = 1
-            self.can_jump = True
-            self.can_double_jump = True
-
-    def jump(self):
-        if self.can_jump:
-            self.gravity = 0
-            self.can_jump = False
-            self.gravity -= self.jump_strength
-        elif self.can_double_jump:
-            self.gravity = 0
-            self.can_double_jump = False
-            self.gravity -= self.jump_strength
+        if self.rect.x < 0-self.width:
+            self.newPlatform()
 
 
 # Functions
@@ -207,18 +209,18 @@ def draw_bg_inf():
     screen.blit(bg_images[5],(x6,0))
     screen.blit(bg_images[5],(y6,0))
 
-    x1 -= 3 * gameSpeed
-    y1 -= 3 * gameSpeed
-    x2 -= 3.5 * gameSpeed
-    y2 -= 3.5 * gameSpeed
-    x3 -= 4 * gameSpeed
-    y3 -= 4 * gameSpeed
-    x4 -= 4.5 * gameSpeed
-    y4 -= 4.5 * gameSpeed
-    x5 -= 5 * gameSpeed
-    y5 -= 5 * gameSpeed
-    x6 -= 5.5 * gameSpeed
-    y6 -= 5.5 * gameSpeed
+    x1 -= 0.25 * parallaxSpeed * gameSpeed
+    y1 -= 0.25 * parallaxSpeed * gameSpeed
+    x2 -= 0.5 * parallaxSpeed * gameSpeed
+    y2 -= 0.5 * parallaxSpeed * gameSpeed
+    x3 -= 0.75 * parallaxSpeed * gameSpeed
+    y3 -= 0.75 * parallaxSpeed * gameSpeed
+    x4 -= 1 * parallaxSpeed * gameSpeed
+    y4 -= 1 * parallaxSpeed * gameSpeed
+    x5 -= 1.25 * parallaxSpeed * gameSpeed
+    y5 -= 1.25 * parallaxSpeed * gameSpeed
+    x6 -= 5 * parallaxSpeed * gameSpeed
+    y6 -= 5 * parallaxSpeed * gameSpeed
 
     if x1 < -width:
         x1 = width
@@ -245,44 +247,99 @@ def draw_bg_inf():
     if y6 < -width:
         y6 = width
 
+def collision_test(rect, tiles):
+    collisions = []
+    for tile in tiles:
+        if rect.colliderect(tile):
+            collisions.append(tile)
+            
+    return collisions
 
+def move(rect, movement, tiles):
+    # Dictionary storing type of collision in the movement
+    collision_types = {"top" : False, "bottom" : False, "right" : False, "left" : False}
+    # Perform movement
+    rect.x += movement[0]
+
+    # Check for collisions with any objects in tiles
+    collisions = collision_test(rect, tiles)
+
+    # For each collision on the x-axis, if moving right, set position of rect's right side to the left side of the colliding object and vice versa.
+    for collision in collisions:
+        if movement[0] > 0:
+            rect.right = collision.left
+            collision_types["right"] = True
+        elif movement[0] < 0:
+            rect.left = collision.right
+            collision_types["left"] = True
+    
+    # Same but for y-axis
+    rect.y += movement[1]
+    collisions = collision_test(rect, tiles)
+    for collision in collisions:
+        if movement[1] > 0:
+            rect.bottom = collision.top
+            collision_types["bottom"] = True
+        elif movement[1] < 0:
+            rect.top = collision.bottom
+            collision_types["top"] = True
+
+    return rect, collision_types
 
 # Instatiate object classes
 doob = doobie()
 die = dice()
 bass = character()
+plat = platform()
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(doob)
 all_sprites.add(die)
 all_sprites.add(bass)
-
+all_sprites.add(plat)
+# Storing rects for things we want to check collision on. e.g. platforms
+tiles = []
 
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
+        
     # Display Background
     draw_bg_inf()
 
+
+    ground_rect =       pygame.Rect(0, height - 50 , width, 1000)
+    top_rect =          pygame.Rect(0,-5000+height,width,100)
+
+    right_wall_rect =   pygame.Rect(width, -5000 + height, 100, 5000)
+    left_wall_rect =    pygame.Rect(-100, -5000 + height , 100, 5000)
+
+    tiles.append(ground_rect)
+    tiles.append(top_rect)
+    tiles.append(right_wall_rect)
+    tiles.append(left_wall_rect)
+
     # Update all objects
     all_sprites.update()
-
+    tiles = []
     # Draw Score
     score_text = font.render(f"Score: {score}", True, (255,255,255), (0,0,0))
     screen.blit(score_text, (10,10))
     
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_ESCAPE]:
-        running = False
 
-    # flip() the display to put your work on screen
+    keys = pygame.key.get_pressed()
+
+
+    # Update display with changes made above
     pygame.display.update()
 
     # limits FPS to 60
     # dt is delta time in seconds since last frame, used for framerate-
     # independent physics.
     dt = clock.tick(FPS) / 1000
+    # Enables closing game on ESC
+    if keys[pygame.K_ESCAPE]:
+        running = False
 
 pygame.quit()
