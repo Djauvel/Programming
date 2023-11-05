@@ -32,6 +32,8 @@ bass_tex = pygame.transform.scale_by(pygame.image.load("Textures/bass.png"), 0.1
 background_tex = pygame.transform.scale(pygame.image.load("Textures/grass.png"),(width,height))
 platform_tex = pygame.image.load("Textures/platform.png")
 carrow_tex = pygame.transform.scale_by(pygame.image.load("Textures/Carrow.png"),0.3)
+hole_tex = pygame.image.load("Textures/hole.png")
+
 
 # Scrolling Parallax Background Implementation
 bg_images = []
@@ -173,6 +175,31 @@ class platform(pygame.sprite.Sprite):
         if self.rect.x < 0-self.width:
             self.newPlatform()
 
+class hole(pygame.sprite.Sprite):
+    def __init__(self) -> None:
+        pygame.sprite.Sprite.__init__(self)
+        self.image = hole_tex
+        self.image = pygame.transform.scale_by(self.image,0.5)
+        self.pos = pygame.Vector2(width + randrange(300), height-100)
+        self.width = self.image.get_width()
+
+    def newitem(self):
+        self.pos.x, self.pos.y = width + randrange(300), height - 100
+
+    def update(self):
+        screen.blit(self.image, self.pos)
+        self.dist_to_player = np.sqrt((self.pos.y-bass.player_rect.y)**2 + (self.pos.x-bass.player_rect.x)**2)
+        if self.dist_to_player < 75:
+            global score
+            score -= 250
+
+        # Move item to left
+        self.pos.x -= 5*gameSpeed
+
+        # If item goes off-screen, generate new    
+        
+        if self.pos.x < 0-self.width:
+            self.newitem()
 
 # Functions
 # FIX CODE (IS UGLY AS)
@@ -301,12 +328,14 @@ doob = doobie()
 die = dice()
 bass = character()
 plat = platform()
+hullet = hole()
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(doob)
 all_sprites.add(die)
 all_sprites.add(bass)
 all_sprites.add(plat)
+all_sprites.add(hullet)
 # Storing rects for things we want to check collision on. e.g. platforms and borders
 tiles = []
 platforms = []
@@ -318,7 +347,6 @@ while running:
         
     # Display Background
     draw_bg_inf()
-
 
     ground_rect =       pygame.Rect(0, height - 50 , width, 1000)
     top_rect =          pygame.Rect(0,-5000+height,width,100)
