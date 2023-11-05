@@ -15,9 +15,8 @@ FPS = 60
 height = screen.get_height()
 width = screen.get_width()
 
-moving_right = False
-moving_left = False
-gameSpeed = 4
+
+gameSpeed = 1
 parallaxSpeed=1
 
 
@@ -32,6 +31,7 @@ dice_tex = pygame.image.load("Textures/dice.png")
 bass_tex = pygame.transform.scale_by(pygame.image.load("Textures/bass.png"), 0.1)
 background_tex = pygame.transform.scale(pygame.image.load("Textures/grass.png"),(width,height))
 platform_tex = pygame.image.load("Textures/platform.png")
+carrow_tex = pygame.transform.scale_by(pygame.image.load("Textures/Carrow.png"),0.3)
 
 # Scrolling Parallax Background Implementation
 bg_images = []
@@ -118,12 +118,10 @@ class character(pygame.sprite.Sprite):
         self.width = self.image.get_width()
         self.player_rect = pygame.Rect(self.player_pos.x, self.player_pos.y, self.width, self.height)
 
-        self.move_speed = width
+        self.move_speed = width * 0.75
         self.gravity = 100
-        
 
         self.player_y_momentum = 0
-        self.player_x_momentum = 0
 
     def update(self):
             screen.blit(self.image, (self.player_rect.x,self.player_rect.y))
@@ -131,36 +129,27 @@ class character(pygame.sprite.Sprite):
 
             # Reset intended movement every iteration
             self.player_movement = [0, 0]
-
-            # Gravity/ bouncing
-            #if self.player_pos.y > height - bass.height:
-            #    self.player_y_momentum = - self.player_y_momentum
-            #else:
-            #    self.player_y_momentum += self.gravity * dt
-            #self.player_pos.y += self.player_y_momentum
-#
-            # Cap maximum y-axis velocity
             
-
+            # Side movement and jumping
             if keys[pygame.K_a]:
                 self.player_movement[0] -= self.move_speed * dt
             if keys[pygame.K_d]:
                 self.player_movement[0] += self.move_speed * dt
             if keys[pygame.K_SPACE]:
                 self.player_y_momentum -= 20
-            
+            # Gravity and player moving with road
             self.player_y_momentum += self.gravity * dt
             self.player_movement[0] -= 5 * gameSpeed
 
+            # Limiting max fall and jump momentum
             if self.player_y_momentum > 30:
                 self.player_y_momentum = 30
             elif self.player_y_momentum < -30:
                 self.player_y_momentum = -30
 
             self.player_movement[1] += self.player_y_momentum
-            
-            
-            self.player_rect, self.collisions = move(self.player_rect, self.player_movement, tiles)
+            # Sending move command
+            self.player_rect, self.collisions = move(self.player_rect, self.player_movement, tiles, platforms)
 
 class platform(pygame.sprite.Sprite):
     def __init__(self) -> None:
@@ -171,7 +160,7 @@ class platform(pygame.sprite.Sprite):
         self.width = self.image.get_width()
         self.height = self.image.get_height()
         self.pos = pygame.Vector2(width + randrange(300),randrange(200,height-300))
-        self.rect = pygame.Rect(self.pos.x, self.pos.y, self.width, self.height)
+        self.rect = pygame.Rect(self.pos.x, self.pos.y, 100 , self.height)
 
     def newPlatform(self):
         self.rect.x, self.rect.y = width + randrange(300), randrange(200,height-300)
@@ -180,8 +169,6 @@ class platform(pygame.sprite.Sprite):
     def update(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
         self.rect.x -= 5 * gameSpeed
-
-        tiles.append(self.rect)
 
         if self.rect.x < 0-self.width:
             self.newPlatform()
@@ -247,22 +234,27 @@ def draw_bg_inf():
     if y6 < -width:
         y6 = width
 
-def collision_test(rect, tiles):
+def collision_test(rect, tiles, platforms):
     collisions = []
+    plat_collisions = []
     for tile in tiles:
         if rect.colliderect(tile):
             collisions.append(tile)
-            
-    return collisions
 
-def move(rect, movement, tiles):
+    for plat in platforms:
+        if rect.colliderect(plat):
+            plat_collisions.append(plat)
+            
+    return collisions, plat_collisions
+
+def move(rect, movement, tiles, platforms):
     # Dictionary storing type of collision in the movement
-    collision_types = {"top" : False, "bottom" : False, "right" : False, "left" : False}
+    collision_types = {"top" : False, "bottom" : False, "right" : False, "left" : False, "platform" : False}
     # Perform movement
     rect.x += movement[0]
 
     # Check for collisions with any objects in tiles
-    collisions = collision_test(rect, tiles)
+    collisions, platform_collisions = collision_test(rect, tiles, platforms)
 
     # For each collision on the x-axis, if moving right, set position of rect's right side to the left side of the colliding object and vice versa.
     for collision in collisions:
@@ -275,17 +267,35 @@ def move(rect, movement, tiles):
     
     # Same but for y-axis
     rect.y += movement[1]
-    collisions = collision_test(rect, tiles)
+    collisions, platform_collisions = collision_test(rect, tiles, platforms)
     for collision in collisions:
         if movement[1] > 0:
             rect.bottom = collision.top
             collision_types["bottom"] = True
         elif movement[1] < 0:
             rect.top = collision.bottom
+            movement[1] = 0
             collision_types["top"] = True
+    
+    for collision in platform_collisions:
+        if movement[1] > 0:
+            rect.bottom = collision.top
+            collision_types["platform"] = True
+            # Allow player to clip through platform if pressing s
+            if keys[pygame.K_s]:
+                rect.top = collision.bottom
+            
+    # Reset falling momentum if the player is standing on something
+    if collision_types["top"]:
+        movement[1] = 0
+        
 
     return rect, collision_types
 
+def carrow():
+    if bass.player_rect.y < 0:
+        screen.blit(carrow_tex, (bass.player_rect.x, 0))
+    
 # Instatiate object classes
 doob = doobie()
 die = dice()
@@ -297,8 +307,9 @@ all_sprites.add(doob)
 all_sprites.add(die)
 all_sprites.add(bass)
 all_sprites.add(plat)
-# Storing rects for things we want to check collision on. e.g. platforms
+# Storing rects for things we want to check collision on. e.g. platforms and borders
 tiles = []
+platforms = []
 
 while running:
     for event in pygame.event.get():
@@ -311,7 +322,6 @@ while running:
 
     ground_rect =       pygame.Rect(0, height - 50 , width, 1000)
     top_rect =          pygame.Rect(0,-5000+height,width,100)
-
     right_wall_rect =   pygame.Rect(width, -5000 + height, 100, 5000)
     left_wall_rect =    pygame.Rect(-100, -5000 + height , 100, 5000)
 
@@ -319,10 +329,12 @@ while running:
     tiles.append(top_rect)
     tiles.append(right_wall_rect)
     tiles.append(left_wall_rect)
+    platforms.append(plat.rect)
 
     # Update all objects
     all_sprites.update()
     tiles = []
+    platforms = []
     # Draw Score
     score_text = font.render(f"Score: {score}", True, (255,255,255), (0,0,0))
     screen.blit(score_text, (10,10))
@@ -330,6 +342,8 @@ while running:
 
     keys = pygame.key.get_pressed()
 
+    # Draw Carrow
+    carrow()
 
     # Update display with changes made above
     pygame.display.update()
