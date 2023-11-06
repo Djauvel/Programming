@@ -9,15 +9,15 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Kaare's Bytur")
 running = True
 dt = 0
-FPS = 60
+FPS = 144
 
 # Settings
 height = screen.get_height()
 width = screen.get_width()
 
 
-gameSpeed = 3
-parallaxSpeed=1
+gameSpeed = 1
+parallaxSpeed = 1
 
 
 # Game score handling
@@ -39,7 +39,7 @@ hole_tex = pygame.image.load("Textures/hole.png")
 bg_images = []
 for i in range(1,7):
     #FIX road texture (6) gap der kommer. +11 er et temporary fix, der også bliver applied til alle andre billeder i baggrunden
-    bg_image = pygame.transform.scale(pygame.image.load(f"Textures/Background/{i}.png").convert_alpha(),(width+11,height))
+    bg_image = pygame.transform.scale(pygame.image.load(f"Textures/Animations/Background/{i}.png").convert_alpha(),(width,height))
     bg_images.append(bg_image)
 
 x1, y1 = 0, width
@@ -60,6 +60,7 @@ class doobie(pygame.sprite.Sprite):
         self.image = pygame.transform.scale_by(self.image,0.1)
         self.pos = pygame.Vector2(width + randrange(300), randrange(100, height-200))
 
+    # Newitem currently just teleports the object to appear again on screen after leaving the screen - Will be fixed
     def newitem(self):
         self.pos.x, self.pos.y = width + randrange(300), randrange(100, height-200)
 
@@ -73,7 +74,7 @@ class doobie(pygame.sprite.Sprite):
             score += 100
         
         # Move item to left
-        self.pos[0] -= 5*gameSpeed
+        self.pos[0] -= 5 * gameSpeed
 
         # If item goes off-screen, generate new    
         
@@ -100,7 +101,7 @@ class dice(pygame.sprite.Sprite):
             score += 250
 
         # Move item to left
-        self.pos[0] -= 5*gameSpeed
+        self.pos[0] -= 5 * gameSpeed
 
         # If item goes off-screen, generate new    
         
@@ -120,9 +121,10 @@ class character(pygame.sprite.Sprite):
         self.width = self.image.get_width()
         self.player_rect = pygame.Rect(self.player_pos.x, self.player_pos.y, self.width, self.height)
 
-        self.move_speed = width * 0.75
-        self.gravity = 100
-
+        self.move_speed = width * 0.01
+        self.gravity = height * 0.005
+        self.jumpStrength = height * 0.05
+        self.maxYVel = 15
         self.player_y_momentum = 0
 
     def update(self):
@@ -134,20 +136,20 @@ class character(pygame.sprite.Sprite):
             
             # Side movement and jumping
             if keys[pygame.K_a]:
-                self.player_movement[0] -= self.move_speed * dt
+                self.player_movement[0] -= self.move_speed
             if keys[pygame.K_d]:
-                self.player_movement[0] += self.move_speed * dt
+                self.player_movement[0] += self.move_speed
             if keys[pygame.K_SPACE]:
-                self.player_y_momentum -= 20
+                self.player_y_momentum -= self.jumpStrength
             # Gravity and player moving with road
-            self.player_y_momentum += self.gravity * dt
-            self.player_movement[0] -= 5 * gameSpeed
+            self.player_y_momentum += self.gravity
+            self.player_movement[0] -= 5 * gameSpeed 
 
             # Limiting max fall and jump momentum
-            if self.player_y_momentum > 30:
-                self.player_y_momentum = 30
-            elif self.player_y_momentum < -30:
-                self.player_y_momentum = -30
+            if self.player_y_momentum > self.maxYVel:
+                self.player_y_momentum = self.maxYVel 
+            elif self.player_y_momentum < -self.maxYVel:
+                self.player_y_momentum = -self.maxYVel 
 
             self.player_movement[1] += self.player_y_momentum
             # Sending move command
@@ -194,7 +196,7 @@ class hole(pygame.sprite.Sprite):
             score -= 250
 
         # Move item to left
-        self.pos.x -= 5*gameSpeed
+        self.pos.x -= 5 * gameSpeed
 
         # If item goes off-screen, generate new    
         
@@ -380,6 +382,7 @@ while running:
     # dt is delta time in seconds since last frame, used for framerate-
     # independent physics.
     dt = clock.tick(FPS) / 1000
+
     # Enables closing game on ESC
     if keys[pygame.K_ESCAPE]:
         running = False
