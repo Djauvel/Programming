@@ -4,7 +4,7 @@ import numpy as np
 
 # Setup
 pygame.init()
-screen = pygame.display.set_mode((1920,1080))
+screen = pygame.display.set_mode((1320,800))
 clock = pygame.time.Clock()
 pygame.display.set_caption("Kaare's Bytur")
 running = True
@@ -16,7 +16,7 @@ height = screen.get_height()
 width = screen.get_width()
 
 
-gameSpeed = 1
+gameSpeed = 3
 parallaxSpeed=1
 
 

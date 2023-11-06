@@ -1,6 +1,15 @@
 import cv2
 import numpy as np
 
+# Constants
+markerSizeCM = 12
+
+#Calibrate camera to obtain camera matrix and 
+
+
+
+
+
 # Initialize the webcam
 cap = cv2.VideoCapture(0)
 
@@ -40,7 +49,8 @@ while True:
     if ids is not None:
         # Draw detected markers on the frame
         cv2.aruco.drawDetectedMarkers(frame, corners, ids)
-        
+
+        # Estimate pose of found ArUco markers
         # Print marker IDs
         for i in range(len(ids)):
             print(f"Marker ID: {ids[i]}")
