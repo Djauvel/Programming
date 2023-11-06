@@ -9,7 +9,7 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Kaare's Bytur")
 running = True
 dt = 0
-FPS = 144
+FPS = 60
 
 # Settings
 height = screen.get_height()
@@ -34,6 +34,11 @@ platform_tex = pygame.image.load("Textures/platform.png")
 carrow_tex = pygame.transform.scale_by(pygame.image.load("Textures/Carrow.png"),0.3)
 hole_tex = pygame.image.load("Textures/hole.png")
 
+# Running Character Animation Import
+bassRun = []
+for i in range(1,9):
+    image = pygame.transform.scale(pygame.image.load(f"Textures/Animations/Bassrun/{i}.png").convert_alpha(),(width*0.1,height*0.15))
+    bassRun.append(image)
 
 # Scrolling Parallax Background Implementation
 bg_images = []
@@ -115,11 +120,18 @@ class character(pygame.sprite.Sprite):
         
         # Spawn location
         self.player_pos = pygame.Vector2((width / 2, height / 2))
+        self.frames = bassRun
+        self.animationID = 1
+        self.frameID = 0
         self.image = bass_tex
         self.image = pygame.transform.scale_by(self.image,0.2)
-        self.height = self.image.get_height()
-        self.width = self.image.get_width()
+        self.height = self.frames[0].get_height()
+        self.width = self.frames[0].get_width()
         self.player_rect = pygame.Rect(self.player_pos.x, self.player_pos.y, self.width, self.height)
+        self.flying = False
+
+        self.movingR = False
+        self.movingL = False
 
         self.move_speed = width * 0.01
         self.gravity = height * 0.005
@@ -127,18 +139,56 @@ class character(pygame.sprite.Sprite):
         self.maxYVel = 15
         self.player_y_momentum = 0
 
+    def runAnimation(self):
+        if self.flying == False:
+            #Flips Texture depending on moving direction
+                if self.frameID*10 % 50 == 0:
+                    if self.movingL == True:
+                        self.image = pygame.transform.flip(self.frames[self.animationID], True, False)
+                    elif self.movingR == True:
+                        self.image = self.frames[self.animationID]
+                    #else:
+                    #   Run Idle animation 
+                    if self.animationID >= 7:
+                        self.animationID = 0
+                    else:
+                        self.animationID += 1
+
+                if self.frameID >= FPS:
+                    self.frameID = 0
+                else:
+                    self.frameID += 1
+
+        else:
+            # flip sprite according to movement direction mid air
+            if self.movingL == True:
+                self.image = pygame.transform.flip(self.frames[7], True, False)
+            else:
+                self.image = self.frames[7]
+
+
+
+
+
     def update(self):
+            self.runAnimation()
             screen.blit(self.image, (self.player_rect.x,self.player_rect.y))
             keys = pygame.key.get_pressed()
 
             # Reset intended movement every iteration
             self.player_movement = [0, 0]
             
+            # Reset move direction booleans
+            self.movingL = False
+            self.movingR = False
+            
             # Side movement and jumping
             if keys[pygame.K_a]:
                 self.player_movement[0] -= self.move_speed
+                self.movingL = True
             if keys[pygame.K_d]:
                 self.player_movement[0] += self.move_speed
+                self.movingR = True
             if keys[pygame.K_SPACE]:
                 self.player_y_momentum -= self.jumpStrength
             # Gravity and player moving with road
@@ -152,8 +202,16 @@ class character(pygame.sprite.Sprite):
                 self.player_y_momentum = -self.maxYVel 
 
             self.player_movement[1] += self.player_y_momentum
+            
+
             # Sending move command
             self.player_rect, self.collisions = move(self.player_rect, self.player_movement, tiles, platforms)
+
+            # Check whether the player is flying
+            if self.player_y_momentum != 0 and (self.collisions["bottom"] or self.collisions["platform"]):
+                self.flying = False
+            else:
+                self.flying = True
 
 class platform(pygame.sprite.Sprite):
     def __init__(self) -> None:
