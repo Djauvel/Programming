@@ -15,15 +15,12 @@ FPS = 60
 height = screen.get_height()
 width = screen.get_width()
 
-
 gameSpeed = 1
 parallaxSpeed = 1
-
 
 # Game score handling
 score = 0
 font = pygame.font.Font(None,36)
-
 
 # Loading Textures
 doobie_tex = pygame.image.load("Textures/Doob.png")
@@ -414,7 +411,7 @@ def move(rect, movement, tiles, platforms):
     return rect, collision_types
 
 def carrow():
-    if bass.player_rect.y < 0:
+    if bass.player_rect.y < 0-bass.height:
         screen.blit(carrow_tex, (bass.player_rect.x, 0))
 
 
