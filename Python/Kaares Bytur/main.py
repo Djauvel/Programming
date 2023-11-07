@@ -28,10 +28,15 @@ font = pygame.font.Font(None,36)
 # Loading Textures
 doobie_tex = pygame.image.load("Textures/Doob.png")
 dice_tex = pygame.image.load("Textures/dice.png")
-bass_tex = pygame.transform.scale_by(pygame.image.load("Textures/Animations/Bassrun/bass_idle.png"), 0.5)
-platform_tex = pygame.image.load("Textures/platform.png")
+bass_tex = pygame.transform.scale(pygame.image.load("Textures/Animations/Bassrun/bass_idle.png"),(width*0.1,height*0.2))
 carrow_tex = pygame.transform.scale_by(pygame.image.load("Textures/Carrow.png"),0.3)
 hole_tex = pygame.image.load("Textures/hole.png")
+
+# Loading platform Textures
+platTex = []
+for i in range(1,5):
+    image = pygame.transform.scale_by(pygame.image.load(f"Textures/Platforms/{i}.png").convert_alpha(),0.3)
+    platTex.append(image)
 
 # Running Character Animation Import
 bassRun = []
@@ -140,6 +145,7 @@ class character(pygame.sprite.Sprite):
         self.jumpStrength = height * 0.05
         self.maxYVel = 15
         self.player_y_momentum = 0
+        self.jumpCount = 2
 
     def runAnimation(self):
         if self.flying == False:
@@ -191,6 +197,7 @@ class character(pygame.sprite.Sprite):
                 self.movingR = True
             if keys[pygame.K_SPACE]:
                 self.player_y_momentum -= self.jumpStrength
+                
             # Gravity and player moving with road
             self.player_y_momentum += self.gravity
             self.player_movement[0] -= 5 * gameSpeed 
@@ -217,12 +224,21 @@ class platform(pygame.sprite.Sprite):
     def __init__(self) -> None:
         #FIX platform Collision
         pygame.sprite.Sprite.__init__(self)
-        self.image = platform_tex
-        self.image = pygame.transform.scale_by(self.image,0.2)
+        if randrange(0,11) >= 8:
+            self.icy = True
+        else:
+            self.icy = False
+
+        if self.icy:
+            self.image = platTex[randrange(2,4)]
+        else:
+            self.image = platTex[randrange(0,2)]
+        
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-        self.pos = pygame.Vector2(width + randrange(300),randrange(200,height-300))
-        self.rect = pygame.Rect(self.pos.x, self.pos.y, 100 , self.height)
+        self.pos = pygame.Vector2(width + randrange(300),randrange(30,height-300))
+        self.rect = pygame.Rect(self.pos.x, self.pos.y, self.width , self.height)
+        
         platforms.append(self)
         all_sprites.add(self)
 
@@ -349,6 +365,15 @@ def move(rect, movement, tiles, platforms):
         elif movement[0] < 0:
             rect.left = collision.right
             collision_types["left"] = True
+
+    # Platforms are full collision
+    for collision in platform_collisions:
+        if movement[0] > 0:
+            rect.right = collision.left
+            collision_types["right"] = True
+        elif movement[0] < 0:
+            rect.left = collision.right
+            collision_types["left"] = True
     
     # Same but for y-axis
     rect.y += movement[1]
@@ -361,14 +386,25 @@ def move(rect, movement, tiles, platforms):
             rect.top = collision.bottom
             movement[1] = 0
             collision_types["top"] = True
-    
+
+    # Platforms are full collision
     for collision in platform_collisions:
         if movement[1] > 0:
             rect.bottom = collision.top
-            collision_types["platform"] = True
-            # Allow player to clip through platform if pressing s
-            if keys[pygame.K_s]:
-                rect.top = collision.bottom
+            collision_types["bottom"] = True
+        elif movement[1] < 0:
+            rect.top = collision.bottom
+            movement[1] = 0
+            collision_types["top"] = True
+    
+    # Platforms have Terraria Platform behavior
+    #for collision in platform_collisions:
+    #    if movement[1] > 0:
+    #        rect.bottom = collision.top
+    #        collision_types["platform"] = True
+    #        # Allow player to clip through platform if pressing s
+    #        if keys[pygame.K_s]:
+    #            rect.top = collision.bottom
             
     # Reset falling momentum if the player is standing on something
     if collision_types["top"]:
@@ -415,10 +451,11 @@ while running:
     tiles.append(left_wall_rect)
 
     # Roll to make new platform
-    frameCount += 1
-    if frameCount == 120:
+    if frameCount == 140:
         platform()
         frameCount = 0
+    else:
+        frameCount += 1
 
     # Update all objects
     all_sprites.update()
