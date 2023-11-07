@@ -28,7 +28,7 @@ font = pygame.font.Font(None,36)
 # Loading Textures
 doobie_tex = pygame.image.load("Textures/Doob.png")
 dice_tex = pygame.image.load("Textures/dice.png")
-bass_tex = pygame.transform.scale_by(pygame.image.load("Textures/bass.png"), 0.1)
+bass_tex = pygame.transform.scale_by(pygame.image.load("Textures/Animations/Bassrun/bass_idle.png"), 0.5)
 background_tex = pygame.transform.scale(pygame.image.load("Textures/grass.png"),(width,height))
 platform_tex = pygame.image.load("Textures/platform.png")
 carrow_tex = pygame.transform.scale_by(pygame.image.load("Textures/Carrow.png"),0.3)
@@ -37,7 +37,7 @@ hole_tex = pygame.image.load("Textures/hole.png")
 # Running Character Animation Import
 bassRun = []
 for i in range(1,9):
-    image = pygame.transform.scale(pygame.image.load(f"Textures/Animations/Bassrun/{i}.png").convert_alpha(),(width*0.1,height*0.15))
+    image = pygame.transform.scale(pygame.image.load(f"Textures/Animations/Bassrun/{i}.png").convert_alpha(),(width*0.1,height*0.2))
     bassRun.append(image)
 
 # Scrolling Parallax Background Implementation
@@ -54,7 +54,11 @@ x4, y4 = 0, width
 x5, y5 = 0, width
 x6, y6 = 0, width
 
+# Storing rects for things we want to check collision on. e.g. platforms and borders
+tiles = []
+platforms = []
 
+all_sprites = pygame.sprite.Group()
 
 # Classes
 class doobie(pygame.sprite.Sprite):
@@ -124,7 +128,6 @@ class character(pygame.sprite.Sprite):
         self.animationID = 1
         self.frameID = 0
         self.image = bass_tex
-        self.image = pygame.transform.scale_by(self.image,0.2)
         self.height = self.frames[0].get_height()
         self.width = self.frames[0].get_width()
         self.player_rect = pygame.Rect(self.player_pos.x, self.player_pos.y, self.width, self.height)
@@ -142,13 +145,15 @@ class character(pygame.sprite.Sprite):
     def runAnimation(self):
         if self.flying == False:
             #Flips Texture depending on moving direction
+                #FIX ANIMATION SPEED CHOICE
                 if self.frameID*10 % 50 == 0:
                     if self.movingL == True:
                         self.image = pygame.transform.flip(self.frames[self.animationID], True, False)
                     elif self.movingR == True:
                         self.image = self.frames[self.animationID]
-                    #else:
+                    else:
                     #   Run Idle animation 
+                        self.image = bass_tex
                     if self.animationID >= 7:
                         self.animationID = 0
                     else:
@@ -165,10 +170,6 @@ class character(pygame.sprite.Sprite):
                 self.image = pygame.transform.flip(self.frames[7], True, False)
             else:
                 self.image = self.frames[7]
-
-
-
-
 
     def update(self):
             self.runAnimation()
@@ -223,17 +224,15 @@ class platform(pygame.sprite.Sprite):
         self.height = self.image.get_height()
         self.pos = pygame.Vector2(width + randrange(300),randrange(200,height-300))
         self.rect = pygame.Rect(self.pos.x, self.pos.y, 100 , self.height)
-
-    def newPlatform(self):
-        self.rect.x, self.rect.y = width + randrange(300), randrange(200,height-300)
-        
+        platforms.append(self)
+        all_sprites.add(self)
 
     def update(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
         self.rect.x -= 5 * gameSpeed
 
         if self.rect.x < 0-self.width:
-            self.newPlatform()
+            self.kill()
 
 class hole(pygame.sprite.Sprite):
     def __init__(self) -> None:
@@ -329,8 +328,8 @@ def collision_test(rect, tiles, platforms):
             collisions.append(tile)
 
     for plat in platforms:
-        if rect.colliderect(plat):
-            plat_collisions.append(plat)
+        if rect.colliderect(plat.rect):
+            plat_collisions.append(plat.rect)
             
     return collisions, plat_collisions
 
@@ -382,23 +381,25 @@ def move(rect, movement, tiles, platforms):
 def carrow():
     if bass.player_rect.y < 0:
         screen.blit(carrow_tex, (bass.player_rect.x, 0))
-    
+
+
 # Instatiate object classes
 doob = doobie()
 die = dice()
 bass = character()
-plat = platform()
 hullet = hole()
 
-all_sprites = pygame.sprite.Group()
 all_sprites.add(doob)
 all_sprites.add(die)
 all_sprites.add(bass)
-all_sprites.add(plat)
 all_sprites.add(hullet)
-# Storing rects for things we want to check collision on. e.g. platforms and borders
-tiles = []
-platforms = []
+
+ground_rect =       pygame.Rect(0, height - 50 , width, 1000)
+top_rect =          pygame.Rect(0,-5000+height,width,100)
+right_wall_rect =   pygame.Rect(width, -5000 + height, 100, 5000)
+left_wall_rect =    pygame.Rect(-100, -5000 + height , 100, 5000)
+
+frameCount = 0
 
 while running:
     for event in pygame.event.get():
@@ -408,21 +409,22 @@ while running:
     # Display Background
     draw_bg_inf()
 
-    ground_rect =       pygame.Rect(0, height - 50 , width, 1000)
-    top_rect =          pygame.Rect(0,-5000+height,width,100)
-    right_wall_rect =   pygame.Rect(width, -5000 + height, 100, 5000)
-    left_wall_rect =    pygame.Rect(-100, -5000 + height , 100, 5000)
-
+    #Making world borders
     tiles.append(ground_rect)
     tiles.append(top_rect)
     tiles.append(right_wall_rect)
     tiles.append(left_wall_rect)
-    platforms.append(plat.rect)
+
+    # Roll to make new platform
+    frameCount += 1
+    if frameCount == 120:
+        platform()
+        frameCount = 0
 
     # Update all objects
     all_sprites.update()
-    tiles = []
-    platforms = []
+
+
     # Draw Score
     score_text = font.render(f"Score: {score}", True, (255,255,255), (0,0,0))
     screen.blit(score_text, (10,10))
@@ -432,6 +434,7 @@ while running:
 
     # Draw Carrow
     carrow()
+    
 
     # Update display with changes made above
     pygame.display.update()
