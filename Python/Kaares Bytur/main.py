@@ -16,7 +16,7 @@ height = screen.get_height()
 width = screen.get_width()
 
 gameSpeed = 1
-parallaxSpeed = 1
+parallaxSpeed = 0.25
 
 # Game score handling
 score = 0
@@ -294,18 +294,18 @@ def draw_bg_inf():
     screen.blit(bg_images[5],(x6,0))
     screen.blit(bg_images[5],(y6,0))
 
-    x1 -= 0.25 * parallaxSpeed * gameSpeed
-    y1 -= 0.25 * parallaxSpeed * gameSpeed
-    x2 -= 0.5 * parallaxSpeed * gameSpeed
-    y2 -= 0.5 * parallaxSpeed * gameSpeed
-    x3 -= 0.75 * parallaxSpeed * gameSpeed
-    y3 -= 0.75 * parallaxSpeed * gameSpeed
-    x4 -= 1 * parallaxSpeed * gameSpeed
-    y4 -= 1 * parallaxSpeed * gameSpeed
-    x5 -= 1.25 * parallaxSpeed * gameSpeed
-    y5 -= 1.25 * parallaxSpeed * gameSpeed
-    x6 -= 5 * parallaxSpeed * gameSpeed
-    y6 -= 5 * parallaxSpeed * gameSpeed
+    x1 -= 1 * parallaxSpeed * gameSpeed
+    y1 -= 1 * parallaxSpeed * gameSpeed
+    x2 -= 2 * parallaxSpeed * gameSpeed
+    y2 -= 2 * parallaxSpeed * gameSpeed
+    x3 -= 3 * parallaxSpeed * gameSpeed
+    y3 -= 3 * parallaxSpeed * gameSpeed
+    x4 -= 4 * parallaxSpeed * gameSpeed
+    y4 -= 4 * parallaxSpeed * gameSpeed
+    x5 -= 5 * parallaxSpeed * gameSpeed
+    y5 -= 5 * parallaxSpeed * gameSpeed
+    x6 -= 20 * parallaxSpeed * gameSpeed
+    y6 -= 20 * parallaxSpeed * gameSpeed
 
     if x1 < -width:
         x1 = width
