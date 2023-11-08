@@ -274,6 +274,29 @@ class hole(pygame.sprite.Sprite):
 
 # Functions
 # FIX CODE (IS UGLY AS)
+
+bg_dict = {
+        "0" : [0,width],
+        "1" : [0,width],
+        "2" : [0,width],
+        "3" : [0,width],
+        "4" : [0,width],
+        "5" : [0,width]
+    }
+def parallax_bg():
+    global gameSpeed, parallaxSpeed
+    for key in bg_dict:
+        screen.blit(bg_images[int(key)],(bg_dict[key][0],0))
+        screen.blit(bg_images[int(key)],(bg_dict[key][1],0))
+        
+        bg_dict[key][0] -= int(key)+1 * parallaxSpeed * gameSpeed
+        bg_dict[key][1] -= int(key)+1 * parallaxSpeed * gameSpeed
+
+        if bg_dict[key][0] < -width:
+            bg_dict[key][0] = width
+        if bg_dict[key][1] < -width:
+            bg_dict[key][1] = width
+
 def draw_bg_inf():
     global x1, x2, x3, x4, x5, x6, y1, y2, y3, y4, y5, y6, gameSpeed
     screen.blit(bg_images[0],(x1,0))
@@ -360,7 +383,8 @@ def move(rect, movement, tiles, platforms):
             rect.right = collision.left
             collision_types["right"] = True
         elif movement[0] < 0:
-            rect.left = collision.right
+            if collision.right >= -bass.width:
+                rect.left = collision.right
             collision_types["left"] = True
 
     # Platforms are full collision
@@ -378,6 +402,8 @@ def move(rect, movement, tiles, platforms):
     for collision in collisions:
         if movement[1] > 0:
             rect.bottom = collision.top
+                
+
             collision_types["bottom"] = True
         elif movement[1] < 0:
             rect.top = collision.bottom
@@ -406,7 +432,14 @@ def move(rect, movement, tiles, platforms):
     # Reset falling momentum if the player is standing on something
     if collision_types["top"]:
         movement[1] = 0
-        
+    if rect.y < -5000:
+        rect.y = -4500
+    if rect.y > height:
+        rect.y = height - 350
+    if rect.x < -100:
+        rect.x = 10
+    if rect.x > width:
+        rect.x = width - 300
 
     return rect, collision_types
 
@@ -428,8 +461,8 @@ all_sprites.add(hullet)
 
 ground_rect =       pygame.Rect(0, height - 50 , width, 1000)
 top_rect =          pygame.Rect(0,-5000+height,width,100)
-right_wall_rect =   pygame.Rect(width, -5000 + height, 100, 5000)
-left_wall_rect =    pygame.Rect(-100, -5000 + height , 100, 5000)
+right_wall_rect =   pygame.Rect(width, -5000 + height, 200, 5000)
+left_wall_rect =    pygame.Rect(-200, -5000 + height , 200, 5000)
 
 frameCount = 0
 
@@ -439,7 +472,7 @@ while running:
             running = False
         
     # Display Background
-    draw_bg_inf()
+    parallax_bg()
 
     #Making world borders
     tiles.append(ground_rect)
