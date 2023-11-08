@@ -4,7 +4,7 @@ import numpy as np
 
 # Setup
 pygame.init()
-screen = pygame.display.set_mode((1320,800))
+screen = pygame.display.set_mode((1320,700))
 clock = pygame.time.Clock()
 pygame.display.set_caption("Kaare's Bytur")
 running = True
