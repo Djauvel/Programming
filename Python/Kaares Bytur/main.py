@@ -434,12 +434,12 @@ def move(rect, movement, tiles, platforms):
         movement[1] = 0
     if rect.y < -5000:
         rect.y = -4500
-    if rect.y > height:
-        rect.y = height - 350
-    if rect.x < -100:
-        rect.x = 10
-    if rect.x > width:
-        rect.x = width - 300
+    #if rect.y > height - bass.height:
+    #    rect.y = height - bass.height
+    if rect.x < 0:
+        rect.x = 0
+    if rect.x > width - bass.width:
+        rect.x = width - bass.width
 
     return rect, collision_types
 
@@ -460,9 +460,9 @@ all_sprites.add(bass)
 all_sprites.add(hullet)
 
 ground_rect =       pygame.Rect(0, height - 50 , width, 1000)
-top_rect =          pygame.Rect(0,-5000+height,width,100)
-right_wall_rect =   pygame.Rect(width, -5000 + height, 200, 5000)
-left_wall_rect =    pygame.Rect(-200, -5000 + height , 200, 5000)
+#top_rect =          pygame.Rect(0,-5000+height,width,100)
+#right_wall_rect =   pygame.Rect(width, -5000 + height, 200, 5000)
+#left_wall_rect =    pygame.Rect(-200, -5000 + height , 200, 5000)
 
 frameCount = 0
 
@@ -476,9 +476,9 @@ while running:
 
     #Making world borders
     tiles.append(ground_rect)
-    tiles.append(top_rect)
-    tiles.append(right_wall_rect)
-    tiles.append(left_wall_rect)
+    #tiles.append(top_rect)
+    #tiles.append(right_wall_rect)
+    #tiles.append(left_wall_rect)
 
     # Roll to make new platform
     if frameCount == 140:
