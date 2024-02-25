@@ -16,7 +16,7 @@ height = screen.get_height()
 width = screen.get_width()
 
 gameSpeed = 1
-parallaxSpeed = 0.25
+parallaxSpeed = 1
 
 # Game score handling
 score = 0
@@ -47,13 +47,6 @@ for i in range(1,7):
     #FIX road texture (6) gap der kommer. +11 er et temporary fix, der også bliver applied til alle andre billeder i baggrunden
     bg_image = pygame.transform.scale(pygame.image.load(f"Textures/Animations/Background/{i}.png").convert_alpha(),(width,height))
     bg_images.append(bg_image)
-
-x1, y1 = 0, width
-x2, y2 = 0, width
-x3, y3 = 0, width
-x4, y4 = 0, width
-x5, y5 = 0, width
-x6, y6 = 0, width
 
 # Storing rects for things we want to check collision on. e.g. platforms and borders
 tiles = []
@@ -245,6 +238,7 @@ class platform(pygame.sprite.Sprite):
 
         if self.rect.x < 0-self.width:
             self.kill()
+            platforms.pop(0)
 
 class hole(pygame.sprite.Sprite):
     def __init__(self) -> None:
@@ -276,84 +270,31 @@ class hole(pygame.sprite.Sprite):
 # FIX CODE (IS UGLY AS)
 
 bg_dict = {
+        "-1" : [0,width],
         "0" : [0,width],
         "1" : [0,width],
         "2" : [0,width],
         "3" : [0,width],
-        "4" : [0,width],
-        "5" : [0,width]
+        "4" : [0,width]
     }
+
 def parallax_bg():
     global gameSpeed, parallaxSpeed
     for key in bg_dict:
-        screen.blit(bg_images[int(key)],(bg_dict[key][0],0))
-        screen.blit(bg_images[int(key)],(bg_dict[key][1],0))
+        screen.blit(bg_images[int(key)+1],(bg_dict[key][0],0))
+        screen.blit(bg_images[int(key)+1],(bg_dict[key][1],0))
         
-        bg_dict[key][0] -= int(key)+1 * parallaxSpeed * gameSpeed
-        bg_dict[key][1] -= int(key)+1 * parallaxSpeed * gameSpeed
+        movement = (int(key) + 1) * parallaxSpeed * gameSpeed 
+        
+
+        bg_dict[key][0] -= movement 
+        bg_dict[key][1] -= movement
+
 
         if bg_dict[key][0] < -width:
             bg_dict[key][0] = width
         if bg_dict[key][1] < -width:
             bg_dict[key][1] = width
-
-def draw_bg_inf():
-    global x1, x2, x3, x4, x5, x6, y1, y2, y3, y4, y5, y6, gameSpeed
-    screen.blit(bg_images[0],(x1,0))
-    screen.blit(bg_images[0],(y1,0))
-
-    screen.blit(bg_images[1],(x2,0))
-    screen.blit(bg_images[1],(y2,0))
-
-    screen.blit(bg_images[2],(x3,0))
-    screen.blit(bg_images[2],(y3,0))
-
-    screen.blit(bg_images[3],(x4,0))
-    screen.blit(bg_images[3],(y4,0))
-
-    screen.blit(bg_images[4],(x5,0))
-    screen.blit(bg_images[4],(y5,0))
-
-    screen.blit(bg_images[5],(x6,0))
-    screen.blit(bg_images[5],(y6,0))
-
-    x1 -= 1 * parallaxSpeed * gameSpeed
-    y1 -= 1 * parallaxSpeed * gameSpeed
-    x2 -= 2 * parallaxSpeed * gameSpeed
-    y2 -= 2 * parallaxSpeed * gameSpeed
-    x3 -= 3 * parallaxSpeed * gameSpeed
-    y3 -= 3 * parallaxSpeed * gameSpeed
-    x4 -= 4 * parallaxSpeed * gameSpeed
-    y4 -= 4 * parallaxSpeed * gameSpeed
-    x5 -= 5 * parallaxSpeed * gameSpeed
-    y5 -= 5 * parallaxSpeed * gameSpeed
-    x6 -= 20 * parallaxSpeed * gameSpeed
-    y6 -= 20 * parallaxSpeed * gameSpeed
-
-    if x1 < -width:
-        x1 = width
-    if x2 < -width:
-        x2 = width
-    if x3 < -width:
-        x3 = width
-    if x4 < -width:
-        x4 = width
-    if x5 < -width:
-        x5 = width
-    if x6 < -width:
-        x6 = width
-    if y1 < -width:
-        y1 = width
-    if y2 < -width:
-        y2 = width
-    if y3 < -width:
-        y3 = width
-    if y4 < -width:
-        y4 = width
-    if y5 < -width:
-        y5 = width
-    if y6 < -width:
-        y6 = width
 
 def collision_test(rect, tiles, platforms):
     collisions = []
